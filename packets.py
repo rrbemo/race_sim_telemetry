@@ -20,23 +20,32 @@ class PackedLittleEndianStructure(ctypes.LittleEndianStructure):
     _pack_ = 1
 
     def __repr__(self):
-        fstr_list = []
+        obj_dict = {}
         for field in self._fields_:
             fname = field[0]
             value = getattr(self, fname)
-            if isinstance(
-                value, (PackedLittleEndianStructure, int, float, bytes)
-            ):
-                vstr = repr(value)
-            elif isinstance(value, ctypes.Array):
-                vstr = "[{}]".format(", ".join(repr(e) for e in value))
-            else:
-                raise RuntimeError(
-                    "Bad value {!r} of type {!r}".format(value, type(value))
-                )
-            fstr = f"{fname}={vstr}"
-            fstr_list.append(fstr)
-        return "{}({})".format(self.__class__.__name__, ", ".join(fstr_list))
+            obj_dict[fname] = "%s" % value
+        return repr(obj_dict)
+
+
+    # def __repr__(self):
+    #     fstr_list = []
+    #     for field in self._fields_:
+    #         fname = field[0]
+    #         value = getattr(self, fname)
+    #         if isinstance(
+    #             value, (PackedLittleEndianStructure, int, float, bytes)
+    #         ):
+    #             vstr = repr(value)
+    #         elif isinstance(value, ctypes.Array):
+    #             vstr = "[{}]".format(", ".join(repr(e) for e in value))
+    #         else:
+    #             raise RuntimeError(
+    #                 "Bad value {!r} of type {!r}".format(value, type(value))
+    #             )
+    #         fstr = f"{fname}={vstr}"
+    #         fstr_list.append(fstr)
+    #     return "{}({})".format(self.__class__.__name__, ", ".join(fstr_list))
 
 # Packet data based on information from forums:
 # 2020:?
@@ -690,7 +699,7 @@ class FlashbackData_2022(PackedLittleEndianStructure):
 class ButtonStatusData_2022(PackedLittleEndianStructure):
     """Event data for Button Status (BUTN)"""
 
-    _fields_ = [("m_buttonStatus", ctypes.c_uint32),]
+    _fields_ = [("buttonStatus", ctypes.c_uint32),]
 
 
 class EventDataDetails_2022(ctypes.Union):
@@ -726,11 +735,15 @@ class PacketEventData_2022_V1(PackedLittleEndianStructure):
     ]
 
     def __repr__(self):
-        #event = self.eventStringCode.decode()
+        obj_dict = {}
         event = "".join([chr(i) for i in self.eventStringCode])
 
+        obj_dict = {}
+        obj_dict["header"] = repr(self.header)
+        obj_dict["eventStringCode"] = event
+
         if event in ["CHQF", "DRSD", "DRSE", "SEND", "SSTA", "LGOT"]:
-            end = ")"
+            event_details = None
         else:
             if event == "FTLP":
                 event_details = self.eventDetails.fastestLap
@@ -756,10 +769,46 @@ class PacketEventData_2022_V1(PackedLittleEndianStructure):
                 event_details = self.eventDetails.buttonStatus
             else:
                 raise RuntimeError(f"Bad event code {event}")
+            obj_dict["eventDetails"] = repr(event_details)
 
-            end = f", eventDetails={event_details!r})"
 
-        return f"{self.__class__.__name__}(header={self.header!r}, eventStringCode={self.eventStringCode!r}{end}"
+        return repr(obj_dict)
+
+    # def __repr__(self):
+    #     #event = self.eventStringCode.decode()
+    #     event = "".join([chr(i) for i in self.eventStringCode])
+    #
+    #     if event in ["CHQF", "DRSD", "DRSE", "SEND", "SSTA", "LGOT"]:
+    #         end = ")"
+    #     else:
+    #         if event == "FTLP":
+    #             event_details = self.eventDetails.fastestLap
+    #         elif event == "PENA":
+    #             event_details = self.eventDetails.penalty
+    #         elif event == "RCWN":
+    #             event_details = self.eventDetails.raceWinner
+    #         elif event == "RTMT":
+    #             event_details = self.eventDetails.retirement
+    #         elif event == "SPTP":
+    #             event_details = self.eventDetails.speedTrap
+    #         elif event == "TMPT":
+    #             event_details = self.eventDetails.teamMateInPits
+    #         elif event == "STLG":
+    #             event_details = self.eventDetails.startLights
+    #         elif event == "DTSV":
+    #             event_details = self.eventDetails.driveThroughServed
+    #         elif event == "SGSV":
+    #             event_details = self.eventDetails.stopGoServed
+    #         elif event == "FLBK":
+    #             event_details = self.eventDetails.flashback
+    #         elif event == "BUTN":
+    #             event_details = self.eventDetails.buttonStatus
+    #         else:
+    #             raise RuntimeError(f"Bad event code {event}")
+    #
+    #         end = f", eventDetails={event_details!r})"
+    #
+    #     return f"{self.__class__.__name__}(header={self.header!r}, eventStringCode={self.eventStringCode!r}{end}"
 
 
 ## Used by all F1 telemetry data
@@ -1602,5 +1651,5 @@ def unpack_udp_packet(packet: bytes) -> PackedLittleEndianStructure:
                 packet_type.__name__, expected_packet_size, actual_packet_size
             )
         )
-
+    #return packet
     return packet_type.from_buffer_copy(packet)
