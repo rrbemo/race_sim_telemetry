@@ -24,7 +24,17 @@ class PackedLittleEndianStructure(ctypes.LittleEndianStructure):
         for field in self._fields_:
             fname = field[0]
             value = getattr(self, fname)
-            obj_dict[fname] = "%s" % value
+            if isinstance(value, (PackedLittleEndianStructure, int, float, bytes)):
+                vstr = repr(value)
+            elif isinstance(value, ctypes.Array):
+                vstr = [repr(e) for e in value]
+            else:
+                raise RuntimeError(
+                    "Bad value {!r} of type {!r}".format(value, type(value))
+                )
+
+            #print("%s: %s" % (fname, vstr))
+            obj_dict[fname] = vstr
         return repr(obj_dict)
 
 
@@ -265,7 +275,8 @@ class PacketMotionData_2022_V1(PackedLittleEndianStructure):
 class MarshalZone_2020_V1(PackedLittleEndianStructure):
     """This type is used for the 21-element 'marshalZones' array of the PacketSessionData_V1 type, defined below."""
 
-    _fields_ = [("zoneStart", ctypes.c_float), ("zoneFlag", ctypes.c_int8)]
+    _fields_ = [("zoneStart", ctypes.c_float), 
+                ("zoneFlag", ctypes.c_int8),]
 
 
 class WeatherForecastSample_2020(PackedLittleEndianStructure):

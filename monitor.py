@@ -2,9 +2,6 @@ import socket
 import json
 import time
 from packets import (
-    PacketHeader,
-    PacketID,
-    HeaderFieldsToPacketType,
     unpack_udp_packet,
 )
 
@@ -41,7 +38,12 @@ with open("TestTelem.txt", "w") as telem_file:
     while not quitflag:
         udp_packet = sock.recv(2048)
         packet = json.loads(repr(unpack_udp_packet(udp_packet)).replace("\"", "").replace("'", "\""))
-        telem_file.write("%s \n" % repr(packet))
+        # Use this to write all data
+        #telem_file.write("%s \n" % repr(packet))
+
+        # Or filter by something in the header to save it off
+        if (packet["header"]["packetId"] == "6"):
+            telem_file.write("%s \n" % repr(packet))
 
 #while not quitflag:
 #    udp_packet = sock.recv(2048)
