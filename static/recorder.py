@@ -1,13 +1,4 @@
-import socket
-import struct
 import time
-from .packets import (
-    PacketHeader,
-    PacketID,
-    HeaderFieldsToPacketType,
-    unpack_udp_packet,
-)
-
 
 from collections import namedtuple
 
