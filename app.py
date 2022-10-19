@@ -8,7 +8,8 @@ from static.packets import (
 
 app = Flask(__name__)
 
-UDP_IP = "127.0.0.1"
+#UDP_IP = "127.0.0.1"
+UDP_IP = "" # Use this to listen to all UDP traffic on that port.
 UDP_PORT = 22022
 
 sock = socket.socket(socket.AF_INET,  # Internet
@@ -22,8 +23,8 @@ def index():
 @app.route("/test_data")
 def test_data():
     def listen_for_data():
-        with open("TestTelem.txt", "w") as telem_file:
-            telem_file.write("This is the test Telem file for 09/18/2022 \n")
+        with open("static/TestTelem.txt", "w") as telem_file:
+            #telem_file.write("This is the test Telem file for 09/18/2022 \n")
             while True:
                 udp_packet = sock.recv(2048)
                 packet = json.loads(repr(unpack_udp_packet(udp_packet)).replace("\"", "").replace("'", "\""))
