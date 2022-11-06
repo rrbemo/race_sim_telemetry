@@ -15,5 +15,6 @@ sock.bind((UDP_IP, UDP_PORT))
 with open("static/TestTelem.txt", "w") as telem_file:
     while True:
         udp_packet = sock.recv(2048)
-        packet = json.loads(repr(unpack_udp_packet(udp_packet)).replace("\"", "").replace("'", "\""))
-        telem_file.write("%s \n" % repr(packet))
+        #packet = json.loads(repr(unpack_udp_packet(udp_packet)).replace("\"", "").replace("'", "\""))
+        packet = repr(unpack_udp_packet(udp_packet)).replace("\"", "").replace("'", "\"")
+        telem_file.write("%s \n" % packet)

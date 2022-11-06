@@ -25,10 +25,13 @@ class PackedLittleEndianStructure(ctypes.LittleEndianStructure):
             fname = field[0]
             value = getattr(self, fname)
             if isinstance(value, (PackedLittleEndianStructure, int, float, bytes)):
+                #print("PLES: %s\n" % value)
                 vstr = repr(value)
             elif isinstance(value, ctypes.Array):
-                vstr = [repr(e) for e in value]
+                #print("array: %s\n" % value)
+                vstr = [e for e in value]
             else:
+
                 raise RuntimeError(
                     "Bad value {!r} of type {!r}".format(value, type(value))
                 )
