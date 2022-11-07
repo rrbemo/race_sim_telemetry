@@ -21,7 +21,7 @@
         <div class="col-12">
             <div class="card">
                 <div class="card-body">
-                    <canvas id="static_canvas"></canvas>
+                    <canvas id="static_canvas" height="100"></canvas>
                 </div>
             </div>
         </div>
@@ -44,8 +44,8 @@
                     label: "Local dataset",
                     pointStyle: "circle",
                     pointRadius: "1",
-                    backgroundColor: 'rgb(255, 99, 132)',
-                    borderColor: 'rgb(255, 99, 132)',
+                    backgroundColor: 'rgb(99, 255, 132)',
+                    borderColor: 'rgb(99, 255, 132)',
                     data: [],
                     fill: false,
                 }],
@@ -54,7 +54,7 @@
                 responsive: true,
                 title: {
                     display: true,
-                    text: 'Streaming Player Throttle Data'
+                    text: 'Streaming Player Data'
                 },
                 tooltips: {
                     mode: 'index',
@@ -113,14 +113,27 @@
                         {% endfor %}
                         ],
                 datasets: [{
-                    label: "Local dataset",
+                    label: "Throttle",
+                    pointStyle: "circle",
+                    pointRadius: "1",
+                    backgroundColor: 'rgb(99, 255, 132)',
+                    borderColor: 'rgb(99, 255, 132)',
+                    data: [
+                        {% for packet in packets %}
+                            {{ packet.carTelemetryData[packet.header.playerCarIndex|int].throttle }},
+                        {% endfor %}
+                        ],
+                    fill: false,
+                },
+                {
+                    label: "Brake",
                     pointStyle: "circle",
                     pointRadius: "1",
                     backgroundColor: 'rgb(255, 99, 132)',
                     borderColor: 'rgb(255, 99, 132)',
                     data: [
                         {% for packet in packets %}
-                            {{ packet.carTelemetryData[packet.header.playerCarIndex|int].throttle }},
+                            {{ packet.carTelemetryData[packet.header.playerCarIndex|int].brake }},
                         {% endfor %}
                         ],
                     fill: false,
@@ -130,7 +143,7 @@
                 responsive: true,
                 title: {
                     display: true,
-                    text: 'Static Player Throttle Data'
+                    text: 'Static Player Data'
                 },
                 tooltips: {
                     mode: 'index',
@@ -152,7 +165,7 @@
                         display: true,
                         scaleLabel: {
                             display: true,
-                            labelString: 'Throttle'
+                            labelString: 'Value'
                         }
                     }]
                 }
