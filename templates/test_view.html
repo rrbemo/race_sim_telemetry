@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Creating Real-Time Charts with Flask</title>
+    <title>Streaming Plot</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.css" rel="stylesheet">
 </head>
@@ -12,7 +12,16 @@
         <div class="col-12">
             <div class="card">
                 <div class="card-body">
-                    <canvas id="canvas"></canvas>
+                    <canvas id="stream_canvas"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <canvas id="static_canvas"></canvas>
                 </div>
             </div>
         </div>
@@ -23,7 +32,8 @@
 <!--suppress JSUnresolvedLibraryURL -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/js/bootstrap.min.js"></script>
 <!--suppress JSUnresolvedLibraryURL -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.js"></script>
+<script src=" https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.js"></script>
+<!-- STREAM_CANVAS -->
 <script>
     $(document).ready(function () {
         const config = {
@@ -44,7 +54,7 @@
                 responsive: true,
                 title: {
                     display: true,
-                    text: 'Player Throttle Data'
+                    text: 'Streaming Player Throttle Data'
                 },
                 tooltips: {
                     mode: 'index',
@@ -73,7 +83,7 @@
             }
         };
 
-        const context = document.getElementById('canvas').getContext('2d');
+        const context = document.getElementById('stream_canvas').getContext('2d');
 
         const lineChart = new Chart(context, config);
 
@@ -86,9 +96,71 @@
                 config.data.datasets[0].data.shift();
             }
             config.data.labels.push(data.header.sessionTime);
-            config.data.datasets[0].data.push(data.carTelemetryData[0].throttle);
+            config.data.datasets[0].data.push(data.carTelemetryData[data.header.playerCarIndex].throttle);
             lineChart.update();
         }
+    });
+</script>
+<!-- STATIC_CANVAS -->
+<script>
+    $(document).ready(function () {
+        const config = {
+            type: 'line',
+            data: {
+                labels: [
+                        {% for packet in packets %}
+                            {{ packet.header.sessionTime }},
+                        {% endfor %}
+                        ],
+                datasets: [{
+                    label: "Local dataset",
+                    pointStyle: "circle",
+                    pointRadius: "1",
+                    backgroundColor: 'rgb(255, 99, 132)',
+                    borderColor: 'rgb(255, 99, 132)',
+                    data: [
+                        {% for packet in packets %}
+                            {{ packet.carTelemetryData[packet.header.playerCarIndex|int].throttle }},
+                        {% endfor %}
+                        ],
+                    fill: false,
+                }],
+            },
+            options: {
+                responsive: true,
+                title: {
+                    display: true,
+                    text: 'Static Player Throttle Data'
+                },
+                tooltips: {
+                    mode: 'index',
+                    intersect: false,
+                },
+                hover: {
+                    mode: 'nearest',
+                    intersect: true
+                },
+                scales: {
+                    xAxes: [{
+                        display: true,
+                        scaleLabel: {
+                            display: true,
+                            labelString: 'Session Time'
+                        }
+                    }],
+                    yAxes: [{
+                        display: true,
+                        scaleLabel: {
+                            display: true,
+                            labelString: 'Throttle'
+                        }
+                    }]
+                }
+            }
+        };
+
+        const context = document.getElementById('static_canvas').getContext('2d');
+        const lineChart = new Chart(context, config);
     });
 </script>
 </body>
