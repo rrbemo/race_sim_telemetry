@@ -21,7 +21,43 @@
         <div class="col-12">
             <div class="card">
                 <div class="card-body">
-                    <canvas id="static_canvas" height="100"></canvas>
+                    <canvas id="static_canvas_speed" height="40"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <canvas id="static_canvas_tb" height="40"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <canvas id="static_canvas_gear" height="40"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <canvas id="static_canvas_steer" height="40"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <canvas id="static_canvas_tyre_in" height="40"></canvas>
                 </div>
             </div>
         </div>
@@ -33,6 +69,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/js/bootstrap.min.js"></script>
 <!--suppress JSUnresolvedLibraryURL -->
 <script src=" https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.js"></script>
+
 <!-- STREAM_CANVAS -->
 <script>
     $(document).ready(function () {
@@ -44,8 +81,8 @@
                     label: "Local dataset",
                     pointStyle: "circle",
                     pointRadius: "1",
-                    backgroundColor: 'rgb(99, 255, 132)',
-                    borderColor: 'rgb(99, 255, 132)',
+                    backgroundColor: 'rgb(50, 50, 50)',
+                    borderColor: 'rgb(50, 50, 50)',
                     data: [],
                     fill: false,
                 }],
@@ -74,9 +111,12 @@
                     }],
                     yAxes: [{
                         display: true,
+                        ticks:{
+                            beginAtZero: true
+                        },
                         scaleLabel: {
                             display: true,
-                            labelString: 'Throttle'
+                            labelString: 'Speed'
                         }
                     }]
                 }
@@ -96,12 +136,71 @@
                 config.data.datasets[0].data.shift();
             }
             config.data.labels.push(data.header.sessionTime);
-            config.data.datasets[0].data.push(data.carTelemetryData[data.header.playerCarIndex].throttle);
+            config.data.datasets[0].data.push(data.carTelemetryData[data.header.playerCarIndex].speed);
             lineChart.update();
         }
     });
 </script>
+
 <!-- STATIC_CANVAS -->
+<!-- SPEED -->
+<script>
+    $(document).ready(function () {
+        const config = {
+            type: 'line',
+            data: {
+                labels: [
+                        {% for packet in packets %}
+                            {{ packet.header.sessionTime }},
+                        {% endfor %}
+                        ],
+                datasets: [{
+                    label: "Speed",
+                    pointStyle: "circle",
+                    pointRadius: "1",
+                    backgroundColor: 'rgb(50, 50, 50)',
+                    borderColor: 'rgb(50, 50, 50)',
+                    data: [
+                        {% for packet in packets %}
+                            {{ packet.carTelemetryData[packet.header.playerCarIndex|int].speed }},
+                        {% endfor %}
+                        ],
+                    fill: false,
+                }],
+            },
+            options: {
+                responsive: true,
+                title: {
+                    display: false
+                },
+                tooltips: {
+                    mode: 'index',
+                    intersect: false,
+                },
+                hover: {
+                    mode: 'nearest',
+                    intersect: true
+                },
+                scales: {
+                    xAxes: [{
+                        display: false
+                    }],
+                    yAxes: [{
+                        display: true,
+                        scaleLabel: {
+                            display: true,
+                            labelString: 'MPH'
+                        }
+                    }]
+                }
+            }
+        };
+
+        const context = document.getElementById('static_canvas_speed').getContext('2d');
+        const lineChart = new Chart(context, config);
+    });
+</script>
+<!-- THROTTLE BRAKE -->
 <script>
     $(document).ready(function () {
         const config = {
@@ -142,8 +241,7 @@
             options: {
                 responsive: true,
                 title: {
-                    display: true,
-                    text: 'Static Player Data'
+                    display: false
                 },
                 tooltips: {
                     mode: 'index',
@@ -155,11 +253,7 @@
                 },
                 scales: {
                     xAxes: [{
-                        display: true,
-                        scaleLabel: {
-                            display: true,
-                            labelString: 'Session Time'
-                        }
+                        display: false
                     }],
                     yAxes: [{
                         display: true,
@@ -172,9 +266,220 @@
             }
         };
 
-        const context = document.getElementById('static_canvas').getContext('2d');
+        const context = document.getElementById('static_canvas_tb').getContext('2d');
         const lineChart = new Chart(context, config);
     });
 </script>
+<!-- GEAR -->
+<script>
+    $(document).ready(function () {
+        const config = {
+            type: 'line',
+            data: {
+                labels: [
+                        {% for packet in packets %}
+                            {{ packet.header.sessionTime }},
+                        {% endfor %}
+                        ],
+                datasets: [{
+                    label: "Gear",
+                    pointStyle: "circle",
+                    pointRadius: "1",
+                    backgroundColor: 'rgb(50, 50, 50)',
+                    borderColor: 'rgb(50, 50, 50)',
+                    data: [
+                        {% for packet in packets %}
+                            {{ packet.carTelemetryData[packet.header.playerCarIndex|int].gear }},
+                        {% endfor %}
+                        ],
+                    fill: false,
+                }],
+            },
+            options: {
+                responsive: true,
+                title: {
+                    display: false
+                },
+                tooltips: {
+                    mode: 'index',
+                    intersect: false,
+                },
+                hover: {
+                    mode: 'nearest',
+                    intersect: true
+                },
+                scales: {
+                    xAxes: [{
+                        display: false
+                    }],
+                    yAxes: [{
+                        display: true,
+                        scaleLabel: {
+                            display: true,
+                            labelString: 'Gear'
+                        }
+                    }]
+                }
+            }
+        };
+
+        const context = document.getElementById('static_canvas_gear').getContext('2d');
+        const lineChart = new Chart(context, config);
+    });
+</script>
+<!-- STEER -->
+<script>
+    $(document).ready(function () {
+        const config = {
+            type: 'line',
+            data: {
+                labels: [
+                        {% for packet in packets %}
+                            {{ packet.header.sessionTime }},
+                        {% endfor %}
+                        ],
+                datasets: [{
+                    label: "Steering",
+                    pointStyle: "circle",
+                    pointRadius: "1",
+                    backgroundColor: 'rgb(50, 50, 50)',
+                    borderColor: 'rgb(50, 50, 50)',
+                    data: [
+                        {% for packet in packets %}
+                            {{ packet.carTelemetryData[packet.header.playerCarIndex|int].steer }},
+                        {% endfor %}
+                        ],
+                    fill: false,
+                }],
+            },
+            options: {
+                responsive: true,
+                title: {
+                    display: false
+                },
+                tooltips: {
+                    mode: 'index',
+                    intersect: false,
+                },
+                hover: {
+                    mode: 'nearest',
+                    intersect: true
+                },
+                scales: {
+                    xAxes: [{
+                        display: false
+                    }],
+                    yAxes: [{
+                        display: true,
+                        scaleLabel: {
+                            display: true,
+                            labelString: 'Steering Direction'
+                        }
+                    }]
+                }
+            }
+        };
+
+        const context = document.getElementById('static_canvas_steer').getContext('2d');
+        const lineChart = new Chart(context, config);
+    });
+</script>
+<!-- TYRES -->
+<script>
+    $(document).ready(function () {
+        const config = {
+            type: 'line',
+            data: {
+                labels: [
+                        {% for packet in packets %}
+                            {{ packet.header.sessionTime }},
+                        {% endfor %}
+                        ],
+                datasets: [{
+                    label: "FR - Inner",
+                    pointStyle: "circle",
+                    pointRadius: "1",
+                    backgroundColor: 'rgb(200, 200, 255)',
+                    borderColor: 'rgb(200, 200, 255)',
+                    data: [
+                        {% for packet in packets %}
+                            {{ packet.carTelemetryData[packet.header.playerCarIndex|int].tyresInnerTemperature[3] }},
+                        {% endfor %}
+                        ],
+                    fill: false,
+                },
+                {
+                    label: "FL - Inner",
+                    pointStyle: "circle",
+                    pointRadius: "1",
+                    backgroundColor: 'rgb(255, 200, 200)',
+                    borderColor: 'rgb(255, 200, 200)',
+                    data: [
+                        {% for packet in packets %}
+                            {{ packet.carTelemetryData[packet.header.playerCarIndex|int].tyresInnerTemperature[2] }},
+                        {% endfor %}
+                        ],
+                    fill: false,
+                },
+                {
+                    label: "RR - Inner",
+                    pointStyle: "circle",
+                    pointRadius: "1",
+                    backgroundColor: 'rgb(150, 150, 255)',
+                    borderColor: 'rgb(150, 150, 255)',
+                    data: [
+                        {% for packet in packets %}
+                            {{ packet.carTelemetryData[packet.header.playerCarIndex|int].tyresInnerTemperature[1] }},
+                        {% endfor %}
+                        ],
+                    fill: false,
+                },
+                {
+                    label: "RL - Inner",
+                    pointStyle: "circle",
+                    pointRadius: "1",
+                    backgroundColor: 'rgb(255, 0, 0)',
+                    borderColor: 'rgb(255, 0, 0)',
+                    data: [
+                        {% for packet in packets %}
+                            {{ packet.carTelemetryData[packet.header.playerCarIndex|int].tyresInnerTemperature[0] }},
+                        {% endfor %}
+                        ],
+                    fill: false,
+                }],
+            },
+            options: {
+                responsive: true,
+                title: {
+                    display: false
+                },
+                tooltips: {
+                    mode: 'index',
+                    intersect: false,
+                },
+                hover: {
+                    mode: 'nearest',
+                    intersect: true
+                },
+                scales: {
+                    xAxes: [{
+                        display: false
+                    }],
+                    yAxes: [{
+                        display: true,
+                        scaleLabel: {
+                            display: true,
+                            labelString: 'Temp (C)'
+                        }
+                    }]
+                }
+            }
+        };
+
+        const context = document.getElementById('static_canvas_tyre_in').getContext('2d');
+        const lineChart = new Chart(context, config);
+    });
+</script>
+
 </body>
 </html>
