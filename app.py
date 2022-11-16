@@ -7,7 +7,8 @@ from static.packets import (
 )
 
 app = Flask(__name__)
-
+#file_name = "static/shortMonza.json"
+file_name = "static/Five_Lapper_Austria.json"
 #UDP_IP = "127.0.0.1"
 # UDP_IP = "" # Use this to listen to all UDP traffic on that port.
 # UDP_PORT = 22022
@@ -17,7 +18,7 @@ app = Flask(__name__)
 # sock.bind((UDP_IP, UDP_PORT))
 
 telem_data = []
-with open("static/shortMonza.json") as telem_file:
+with open(file_name) as telem_file:
     telem_line = telem_file.readline()
     while telem_line:
         packet = json.loads(telem_line.replace(": b", ": "))
