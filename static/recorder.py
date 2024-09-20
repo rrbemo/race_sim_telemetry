@@ -1,12 +1,12 @@
 import socket
 import json
-from packets import (
+from packets_f123 import (
     unpack_udp_packet,
 )
 
 #UDP_IP = "127.0.0.1"
 UDP_IP = "" # Use this to listen to all incoming UDP traffic on that port.
-UDP_PORT = 22022
+UDP_PORT = 22023
 
 sock = socket.socket(socket.AF_INET,  # Internet
                      socket.SOCK_DGRAM)  # UDP
