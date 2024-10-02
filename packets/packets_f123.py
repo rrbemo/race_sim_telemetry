@@ -24,7 +24,10 @@ class PackedLittleEndianStructure(ctypes.LittleEndianStructure):
         for field in self._fields_:
             fname = field[0]
             value = getattr(self, fname)
-            if isinstance(value, (PackedLittleEndianStructure, int, float, bytes)):
+            if (isinstance(value, (bytes, bytearray))): # Added to handle byte user names
+                # Print the decoded version
+                vstr = repr(value.decode("utf-8"))
+            elif isinstance(value, (PackedLittleEndianStructure, int, float)):
                 #print("PLES: %s\n" % value)
                 vstr = repr(value)
             elif isinstance(value, ctypes.Array):
@@ -107,6 +110,9 @@ class PacketID(enum.IntEnum):
     LOBBY_INFO = 9
     CAR_DAMAGE = 10             # New to 2022
     SESSION_HISTORY = 11        # New to 2022
+    TYRE_SETS_DATA = 12         # New in 2023
+    MOTION_EX_DATA = 13         # New in 2023
+
 
     long_description: Dict[enum.IntEnum, str]
     short_description: Dict[enum.IntEnum, str]
@@ -125,6 +131,8 @@ PacketID.short_description = {
     PacketID.LOBBY_INFO: "Lobby information",
     PacketID.CAR_DAMAGE: "Car Damage",
     PacketID.SESSION_HISTORY: "Session History",
+    PacketID.TYRE_SETS_DATA: "Tyre Sets Data",
+    PacketID.MOTION_EX_DATA: "Extra Motion",
 }
 
 
@@ -141,6 +149,8 @@ PacketID.long_description = {
     PacketID.LOBBY_INFO: "Information about players in a multiplayer lobby",
     PacketID.CAR_DAMAGE: "Damage status for all cars",
     PacketID.SESSION_HISTORY: "Lap and tyre data for session",
+    PacketID.TYRE_SETS_DATA: "Data about used and remaining tyres",
+    PacketID.MOTION_EX_DATA: "Motion data about other cars",
 }
 
 

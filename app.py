@@ -1,67 +1,107 @@
-from flask import Flask, Response, request, render_template, stream_with_context
+from flask import Flask, render_template
+import pandas as pd
 import socket
+import threading
+import psycopg2
 import json
-import time
-from static.packets import (
+from packets.packets_f123 import (
     unpack_udp_packet,
 )
+import yaml
 
 app = Flask(__name__)
-#file_name = "static/shortMonza.json"
-file_name = "static/Five_Lapper_Austria.json"
-#UDP_IP = "127.0.0.1"
-# UDP_IP = "" # Use this to listen to all UDP traffic on that port.
-# UDP_PORT = 22022
-#
-# sock = socket.socket(socket.AF_INET,  # Internet
-#                      socket.SOCK_DGRAM)  # UDP
-# sock.bind((UDP_IP, UDP_PORT))
 
-telem_data = []
-with open(file_name) as telem_file:
-    telem_line = telem_file.readline()
-    while telem_line:
-        packet = json.loads(telem_line.replace(": b", ": "))
-        telem_data.append(packet)
-        telem_line = telem_file.readline()
+# open the yaml file and read in the values
+with open('static/config.yaml', 'r') as conf:
+    db_conf = yaml.safe_load(conf)
+usr = db_conf['db']['username']
+pwd = db_conf['db']['pass']
+host = db_conf['db']['host']
+db_name = db_conf['db']['dbname']
+table_name = db_conf['db']['tablename']
+
+
+def udp_listener():
+    # UDP_IP = "127.0.0.1"
+    UDP_IP = ""  # Use "" to listen to all incoming UDP traffic on that port.
+    UDP_PORT = 22023
+
+    sock = socket.socket(socket.AF_INET,  # Internet
+                         socket.SOCK_DGRAM)  # UDP
+    sock.bind((UDP_IP, UDP_PORT))
+
+    # Connect to the database
+    conn = psycopg2.connect(
+        host=host,
+        database=db_name,
+        user=usr,
+        password=pwd
+    )
+    cur = conn.cursor()
+
+    while True:
+        udp_packet = sock.recv(2048)
+
+        unpacked_packet = repr(unpack_udp_packet(udp_packet)).replace("\"", "").replace("'", "\"")
+        try:
+            # Do the conversion just to check that it is json convertable...
+            json_packet = json.loads(unpacked_packet)
+            #if (json_packet['header']['packetId'] in ("4", "10")):
+            #    print(json_packet)
+
+            # Write to db (use the non-dictionary, string version of the data)
+            cur.execute(
+               f"INSERT INTO {table_name} (json_data) VALUES (%s)", (unpacked_packet,))
+            conn.commit()
+
+            print(f"received and stored a packet from: somewhere")
+        except ValueError:
+            print(f"Unable to parse: {unpacked_packet}")
+
+
+    cur.close()
+    conn.close()
 
 @app.route("/")
 def index():
-    telem_packets = []
-    for packet in telem_data:
-        if (packet["header"]["packetId"] == "6"):
-            telem_packets.append(packet)
-    templateData = {
-        "packets": telem_packets,
-    }
-    return render_template("test_view.html", **templateData)
+    message = "Race Sim says, Hello!"
+    templateData = {"message": message}
 
-@app.route("/test_data")
-def test_data():
-    def listen_for_data():
-        for packet in telem_data:
-            #udp_packet = sock.recv(2048)
-            #packet = json.loads(repr(unpack_udp_packet(udp_packet)).replace("\"", "").replace("'", "\""))
-            #print(telem_line)
-            #packet = json.loads(telem_line.replace(": b", ": "))
-            #print(packet)
-            #telem_line = telem_file.readline()
-            #print(packet["header"]["packetId"])
-            # Use this to write all data
-            # telem_file.write("%s \n" % repr(packet))
-            # Or filter by something in the header to save it off
-            if (packet["header"]["packetId"] == "6"):
-                #print(packet)
-                #telem_file.write("%s \n" % repr(packet))
-                yield f"data:{json.dumps(packet)}\n\n"
-                time.sleep(0.05)
-    #Streaming version
-    response = Response(stream_with_context(listen_for_data()), mimetype="text/event-stream")
-    response.headers["Cache-Control"] = "no-cache"
-    response.headers["X-Accel-Buffering"] = "no"
-    return response
-    # data = {''}
-    # return render_template('test_view.html', )
+    return render_template('index.html', **templateData)
+@app.route("/packets", methods=['GET'])
+def get_packets():
+    try:
+        # Connect to the database
+        conn = psycopg2.connect(
+            host=host,
+            database=db_name,
+            user=usr,
+            password=pwd
+        )
+        cur = conn.cursor()
+
+        cur.execute(f'SELECT * FROM {table_name}')
+        packet_data = cur.fetchall()
+
+        cur.close()
+        conn.close()
+    except Exception as e:
+        print(e)
+        return None
+
+    column_names = ['id', 'json_data']
+    df = pd.DataFrame(packet_data, columns=column_names)
+    print(df['json_data'])
+    templateData = {
+        "packets": [{'id': df['id'],
+                    'raw_packet': df['json_data']}]
+    }
+    return render_template("packet_view.html", **templateData)
+
+@app.route("/session/<int:session_id>")
+def show_session_data(session_id):
+    pass
 
 if __name__ == '__main__':
-    app.run()#debug=True, threaded=True)
+    threading.Thread(target=udp_listener, daemon=True).start()
+    app.run(host="0.0.0.0", port=8080)#debug=True, threaded=True)

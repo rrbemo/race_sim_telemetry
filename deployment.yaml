@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: race-sim-telemetry
+  labels:
+    app: race-sim-telemetry
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: race-sim-telemetry
+  template:
+    metadata:
+      labels:
+        app: race-sim-telemetry
+    spec:
+      containers:
+      - name: race-sim-telemetry
+        image: race_sim_docker:latest
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 8080
+        env:
+        - name: FLASK_ENV
+          value: "production"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: race-sim-telemetry-service
+  labels:
+    app: race-sim-telemetry
+spec:
+  selector:
+    app: race-sim-telemetry
+  ports:
+  - name: http
+    protocol: TCP
+    port: 80
+    targetPort: 8080
+  type: LoadBalancer
