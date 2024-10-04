@@ -1118,7 +1118,7 @@ class TyreSetData_V1(PackedLittleEndianStructure):
     ]
 
 
-class PacketTyreSetsData(PackedLittleEndianStructure):
+class PacketTyreSetsData_V1(PackedLittleEndianStructure):
     """
     """
 
@@ -1150,7 +1150,7 @@ HeaderFieldsToPacketType = {
     (2023, 1, 9): PacketLobbyInfoData_V1,
     (2023, 1, 10): PacketCarDamageData_V1,
     (2023, 1, 11): PacketSessionHistoryData_V1,
-    (2023, 1, 12): PacketTyreSetsData,
+    (2023, 1, 12): PacketTyreSetsData_V1,
     (2023, 1, 13): PacketMotionExData_V1
 }
 

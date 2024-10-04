@@ -80,7 +80,7 @@ def get_packets():
         )
         cur = conn.cursor()
 
-        cur.execute(f'SELECT * FROM {table_name}')
+        cur.execute(f"SELECT distinct json_data->'header'->>'sessionUID' as sessionUID FROM {table_name}")
         packet_data = cur.fetchall()
 
         cur.close()
@@ -89,12 +89,11 @@ def get_packets():
         print(e)
         return None
 
-    column_names = ['id', 'json_data']
+    column_names = ['sessionUID']
     df = pd.DataFrame(packet_data, columns=column_names)
-    print(df['json_data'])
+    print(df['sessionUID'])
     templateData = {
-        "packets": [{'id': df['id'],
-                    'raw_packet': df['json_data']}]
+        "packets": [{'sessionUID': df['sessionUID']}]
     }
     return render_template("packet_view.html", **templateData)
 

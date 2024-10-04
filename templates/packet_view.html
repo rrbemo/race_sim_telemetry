@@ -15,12 +15,10 @@
                     <table>
                         <tr>
                             <th>ID</th>
-                            <th>JSON</th>
                         </tr>
                         {% for packet in packets %}
                         <tr>
-                            <td>{{packet.id}}</td>
-                            <td>{{packet.raw_packet}}</td>
+                            <td>{{packet.sessionUID}}</td>
                         </tr>
                         {% endfor %}
                     </table>
