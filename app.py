@@ -12,9 +12,6 @@ import yaml
 
 app = Flask(__name__)
 
-
-
-
 def udp_listener():
     ## UDP listening
     # UDP_IP = "127.0.0.1"
@@ -77,9 +74,28 @@ def get_packets():
     }
     return render_template("packet_view.html", **templateData)
 
+@app.route("/sessions")
+def show_sessions():
+    # Get all unique sessions and some helpful data to make a selection
+    my_connection = SimStore()
+    sessions = my_connection.execute_query("SELECT DISTINCT session_uid FROM car_telemetry")
+
+    template_data = sessions
+
+    return render_template('session_selector.html', **template_data)
+
+
 @app.route("/session/<int:session_id>")
 def show_session_data(session_id):
-    pass
+    # Get some session data
+    my_connection = SimStore()
+    session_data = my_connection.execute_query(f"SELECT * FROM car_telemetry WHERE session_uid = '{session_id}'")
+    print(session_data)
+
+    # Display a something
+    template_data = session_data.groupby('participant_index')
+
+    return render_template('session_details.html', data=template_data)
 
 if __name__ == '__main__':
     threading.Thread(target=udp_listener, daemon=True).start()

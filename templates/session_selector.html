@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Session Selection</title>
+</head>
+<body>
+    <h1>Session Selection</h1>
+    {% for id in session_uid %}
+        <div>
+            <a href="/session/{{id}}">{{id}}</a>
+        </div>
+    {% endfor %}
+</body>
+</html>

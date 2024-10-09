@@ -1,4 +1,6 @@
 import pkgutil
+
+import pandas as pd
 import psycopg2
 import yaml
 
@@ -47,7 +49,10 @@ class SimStore:
             with self.__conn.cursor() as cur:
                 cur.execute(query, params)
                 if query.lower().startswith('select'):
-                    return cur.fetchall()
+                    data = cur.fetchall()
+                    cols = list(map(lambda x: x[0], cur.description))
+                    df = pd.DataFrame(data, columns=cols)
+                    return df
         except psycopg2.Error as e:
             print(f"Error executing query: {e}")
             self.__conn.rollback()

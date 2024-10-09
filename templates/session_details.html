@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Session {{session_uid}} details</title>
+</head>
+<body>
+    <h1>Session {{session_uid}} details</h1>
+    <table>
+        {% for participant_id, group in data %}
+            <tr>
+                <th>{{ participant_id }}</th>
+            </tr>
+            <tr>
+                <th>Frame</th>
+                <th>Throttle</th>
+                <th>Brake</th>
+                <th>Session Time</th>
+            </tr>
+            {% for index, row in group.iterrows() %}
+                <tr>
+                    <td>{{ row['frame_id'] }}</td>
+                    <td>{{ row['throttle'] }}</td>
+                    <td>{{ row['brake'] }}</td>
+                    <td>{{ row['session_time'] }}</td>
+                </tr>
+            {% endfor %}
+        {% endfor %}
+    </table>
+</body>
+</html>
