@@ -10,7 +10,7 @@ from typing import Dict
 #                                                       #
 #########################################################
 
-
+# Tire order is 0=RL 1=RR 2=FL 3=FR
 class PackedLittleEndianStructure(ctypes.LittleEndianStructure):
     """The standard ctypes LittleEndianStructure, but tightly packed (no field padding), and with a proper repr() function.
 

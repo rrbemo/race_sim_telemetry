@@ -2,8 +2,9 @@ from flask import Flask, render_template
 import pandas as pd
 import socket
 import threading
-import psycopg2
 import json
+from simstore.simstore import SimStore
+import simdataclasses.simdataclasses as rsdc
 from packets.packets_f123 import (
     unpack_udp_packet,
 )
@@ -11,56 +12,51 @@ import yaml
 
 app = Flask(__name__)
 
-# open the yaml file and read in the values
-with open('static/config.yaml', 'r') as conf:
-    db_conf = yaml.safe_load(conf)
-usr = db_conf['db']['username']
-pwd = db_conf['db']['pass']
-host = db_conf['db']['host']
-db_name = db_conf['db']['dbname']
-table_name = db_conf['db']['tablename']
+
 
 
 def udp_listener():
+    ## UDP listening
     # UDP_IP = "127.0.0.1"
     UDP_IP = ""  # Use "" to listen to all incoming UDP traffic on that port.
     UDP_PORT = 22023
-
     sock = socket.socket(socket.AF_INET,  # Internet
                          socket.SOCK_DGRAM)  # UDP
     sock.bind((UDP_IP, UDP_PORT))
 
-    # Connect to the database
-    conn = psycopg2.connect(
-        host=host,
-        database=db_name,
-        user=usr,
-        password=pwd
-    )
-    cur = conn.cursor()
-
+    ## Connection to database for saving
+    my_connection = SimStore()
     while True:
         udp_packet = sock.recv(2048)
 
-        unpacked_packet = repr(unpack_udp_packet(udp_packet)).replace("\"", "").replace("'", "\"")
-        try:
-            # Do the conversion just to check that it is json convertable...
-            json_packet = json.loads(unpacked_packet)
-            #if (json_packet['header']['packetId'] in ("4", "10")):
-            #    print(json_packet)
+        packet = repr(unpack_udp_packet(udp_packet)).replace("\"", "").replace("'", "\"")
+        # Save the raw packet like I originally was...
+        my_connection.execute_query(f"INSERT INTO raw_packet (json_data) VALUES (%s)", (packet,))
 
-            # Write to db (use the non-dictionary, string version of the data)
-            cur.execute(
-               f"INSERT INTO {table_name} (json_data) VALUES (%s)", (unpacked_packet,))
-            conn.commit()
+        # Now parse and save the packet into their own tables.
+        json_packet = json.loads(packet)
+        data = None
+        if json_packet:
+            if json_packet['header']:
+                match json_packet['header']['packetId']:
+                    case '4':
+                        # This packet only seems to be created for online lobbies.
+                        data = rsdc.SessionParticipant.packet_to_data(json_packet)
+                    case '6':
+                        data = rsdc.Telemetry.packet_to_data(json_packet)
+                    case '7':
+                        # TODO: build a dataclass for the car damage packet
+                        print("Missed a damage packet")
+                    case '8':
+                        # TODO: build a dataclass for the session outcome packet
+                        print("Missed the outcomes packet")
+                    case _:
+                        print("packet not handled")
 
-            print(f"received and stored a packet from: somewhere")
-        except ValueError:
-            print(f"Unable to parse: {unpacked_packet}")
-
-
-    cur.close()
-    conn.close()
+        if data:
+            for d in data:
+                # Execute an insert for each data object
+                my_connection.execute_query(d.insert_string())
 
 @app.route("/")
 def index():
@@ -68,29 +64,13 @@ def index():
     templateData = {"message": message}
 
     return render_template('index.html', **templateData)
+
 @app.route("/packets", methods=['GET'])
 def get_packets():
-    try:
-        # Connect to the database
-        conn = psycopg2.connect(
-            host=host,
-            database=db_name,
-            user=usr,
-            password=pwd
-        )
-        cur = conn.cursor()
-
-        cur.execute(f"SELECT distinct json_data->'header'->>'sessionUID' as sessionUID FROM {table_name}")
-        packet_data = cur.fetchall()
-
-        cur.close()
-        conn.close()
-    except Exception as e:
-        print(e)
-        return None
+    unique_sessions = SimStore.execute_query(f"SELECT distinct json_data->'header'->>'sessionUID' as sessionUID FROM raw_packet")
 
     column_names = ['sessionUID']
-    df = pd.DataFrame(packet_data, columns=column_names)
+    df = pd.DataFrame(unique_sessions, columns=column_names)
     print(df['sessionUID'])
     templateData = {
         "packets": [{'sessionUID': df['sessionUID']}]
