@@ -6,10 +6,12 @@
 </head>
 <body>
     <h1>Session {{session_uid}} details</h1>
+    {{ vis|safe }}
     <table>
-        {% for participant_id, group in data %}
+        {% for (participant_index, driver_name), group in data %}
             <tr>
-                <th>{{ participant_id }}</th>
+                <th>{{ participant_index|safe }}</th>
+                <th>{{ driver_name|safe }}</th>
             </tr>
             <tr>
                 <th>Frame</th>
