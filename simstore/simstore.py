@@ -3,6 +3,7 @@ import pkgutil
 import pandas as pd
 import psycopg2
 import yaml
+import os
 
 
 class SimStore:
@@ -17,12 +18,19 @@ class SimStore:
 
     def __connect(self):
         # open the yaml file and read in the values
-        db_conf = yaml.safe_load(pkgutil.get_data(__name__, "config.yaml"))
-        usr = db_conf['db']['username']
-        pwd = db_conf['db']['pass']
-        host = db_conf['db']['host']
-        port = db_conf['db']['port']
-        db_name = db_conf['db']['dbname']
+        # db_conf = yaml.safe_load(pkgutil.get_data(__name__, "config.yaml"))
+        # usr = db_conf['db']['username']
+        # pwd = db_conf['db']['pass']
+        # host = db_conf['db']['host']
+        # port = db_conf['db']['port']
+        # db_name = db_conf['db']['dbname']
+        # Update to use env vars
+        usr = os.getenv("RST_PGSQL_USER")
+        pwd = os.getenv("RST_PGSQL_PWD")
+        host = os.getenv("RST_PGSQL_HOST")
+        port = os.getenv("RST_PGSQL_PORT")
+        db_name = os.getenv("RST_PGSQL_DBNAME")
+
         try:
             # Connect to the database
             self.__conn = psycopg2.connect(
